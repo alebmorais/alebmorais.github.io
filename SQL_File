@@ -13,6 +13,7 @@ INSERT INTO frases (nome, conteudo, categoria_principal, subcategoria, ordem) VA
 ('Cumprimento manhã', 'Bom dia, tudo bem? Qual seria a solicitação, por gentileza?', 'Atendimento Gerais', 'Inicio', 1),
 ('Cumprimento tarde', 'Boa tarde, tudo bem? Qual seria a solicitação, por gentileza?', 'Atendimento Gerais', 'Inicio', 2),
 ('Cumprimento noite', 'Boa noite, tudo bem? Qual seria a solicitação, por gentileza?', 'Atendimento Gerais', 'Inicio', 3);
+('Cumprimento noite', 'Boa noite, tudo bem? Qual seria a solicitação, por gentileza?', 'Atendimento Gerais', 'Inicio', 3),
 ('Aguardar momento', 'Olá, tudo bem? Um momento, por favor. Estou finalizando a discussão de outro caso.', 'Atendimento Gerais', 'Inicio', 4),
 ('Qual dúvida', 'Qual seria a dúvida, por gentileza?', 'Atendimento Gerais', 'Inicio', 5),
 ('Como ajudar', 'Em que posso ajudar, por gentileza?', 'Atendimento Gerais', 'Inicio', 6),
