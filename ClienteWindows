@@ -428,7 +428,7 @@ def on_subcategory_select(self, event):
 def load_phrases(self):
     """Carregar frases"""
     try:
-        url = f"{self.pi_url}/api/frases/{self.selected_category}/{self.selected_subcategoria}"
+        url = f"{self.pi_url}/api/frases/{self.selected_category}/{self.selected_subcategory}"
         response = requests.get(url, timeout=3)
         if response.status_code == 200:
             self.phrases = response.json()
