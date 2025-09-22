@@ -106,12 +106,14 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         """Processar requisicoes GET"""
         try:
             parsed_url = urllib.parse.urlparse(self.path)
-            path = parsed_url.path
-            path_parts = [part for part in path.split('/') if part]
+            path.split('/') if part]
 
             if path == '/':
                 self.send_medical_interface()
                 return
+
+            stripped_path = path.strip('/')
+            path_parts = stripped_path.split('/') if stripped_path else []
 
             if path == '/api/categorias':
                 categorias = self.automation_server.get_categorias_principais()
@@ -133,7 +135,7 @@ class WebRequestHandler(BaseHTTPRequestHandler):
                 return
 
             if len(path_parts) >= 2 and path_parts[0] == 'api' and path_parts[1] == 'frases':
-            if len(path_parts) == 2:
+                if len(path_parts) == 2:
                     query_params = urllib.parse.parse_qs(parsed_url.query)
                     categoria = query_params.get('categoria', [None])[0] or None
                     subcategoria = query_params.get('subcategoria', [None])[0] or None
@@ -144,8 +146,12 @@ class WebRequestHandler(BaseHTTPRequestHandler):
                 categoria = urllib.parse.unquote(path_parts[2]) if len(path_parts) >= 3 else None
                 subcategoria = urllib.parse.unquote(path_parts[3]) if len(path_parts) >= 4 else None
 
-                if not categoria:
+                if categoria in (None, ''):
                     self.send_error(400, "Categoria não especificada")
+                    return
+
+                if len(path_parts) >= 4 and subcategoria == '':
+                    self.send_error(400, "Subcategoria não especificada")
                     return
 
                 frases = self.automation_server.get_frases(categoria, subcategoria)
