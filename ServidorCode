@@ -657,11 +657,11 @@ class WebRequestHandler(BaseHTTPRequestHandler):
             const quickActionsContainer = document.getElementById('quick-actions');
 
             const quickPhrases = [
-                { label: 'Bom dia', text: 'Bom dia! Sou a Dra. Alessandra Morais. Vamos conversar sobre o que está sentindo hoje?' },
-                { label: 'Boa tarde', text: 'Boa tarde! Sou a Dra. Alessandra Morais. Conte-me como posso ajudar nesta consulta.' },
-                { label: 'Orientações gerais', text: 'Fique à vontade para me interromper caso tenha dúvidas. Ao final alinharemos os próximos passos e sinais de alerta.' },
-                { label: 'Encerramento', text: 'Agradeço a confiança. Estarei disponível para dúvidas e retornos conforme necessário.' },
-                { label: 'Telemedicina', text: 'Este atendimento segue as diretrizes de Telemedicina do CFM. Confirma que está em local reservado e com boa conexão?' }
+                { label: 'Bom dia', text: 'Bom dia, tudo bem? Qual seria a solicitação, por gentileza?' },
+                { label: 'Boa tarde', text: 'Boa tarde, tudo bem? Qual seria a solicitação, por gentileza?' },
+                { label: 'Boa noite', text: 'Boa noite, tudo bem? Qual seria a solicitação, por gentileza?' },
+                { label: 'Encerramento', text: 'Disponha! Bom plantão!' },
+                { label: 'Início TeleAVC', text: 'Bom dia! Me chamo Alessandra Morais, neurologista do programa TeleAVC. Estou disponível hoje das 07h às 19h. Bom plantão a todos!' }
             ];
 
             function escapeHTML(value) {
