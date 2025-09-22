@@ -106,13 +106,15 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         """Processar requisicoes GET"""
         try:
             parsed_url = urllib.parse.urlparse(self.path)
-            path = parsed_url.path
-            path_parts = [part for part in path.split('/') if part]
+            path = parsed_url.path or '/'
 
             if path == '/':
                 self.send_medical_interface()
                 return
-          
+
+            stripped_path = path.strip('/')
+            path_parts = stripped_path.split('/') if stripped_path else []
+
             if path == '/api/categorias':
                 categorias = self.automation_server.get_categorias_principais()
                 self.send_json_response(categorias)
