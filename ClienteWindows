@@ -19,15 +19,15 @@ try:
 
     REQUESTS_AVAILABLE = True
 except ImportError:
-      REQUESTS_AVAILABLE = False
-    requests = None
+    REQUESTS_AVAILABLE = False
+requests = None
 
 try:
   import speech_recognition as sr
 
     SPEECH_AVAILABLE = True
 except ImportError:
-SPEECH_AVAILABLE = False
+    SPEECH_AVAILABLE = False
 
 try:
   import pyautogui
@@ -42,7 +42,7 @@ try:
 
     PYNPUT_AVAILABLE = True
 except ImportError:
-  PYNPUT_AVAILABLE = False
+    PYNPUT_AVAILABLE = False
 
 
 class WindowsDesktopClient:
@@ -447,8 +447,8 @@ def __init__(self):
                 self.update_status("Conectado ao Pi Zero - Categorias carregadas")
             else:
                 self.update_status("Erro ao conectar com Pi Zero")
-        except Exception as e:
-            self.update_status(f"Não foi possível conectar ao Pi: {e}")
+            except Exception as e:
+                self.update_status(f"Não foi possível conectar ao Pi: {e}")
 
     def update_categories_listbox(self):
         """Atualizar listbox de categorias"""
