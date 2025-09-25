@@ -79,10 +79,13 @@ class MedicalAutomationServer:
                 cursor = conn.execute("SELECT * FROM frases ORDER BY categoria_principal, subcategoria, ordem")
             frases = []
             for row in cursor:
+                conteudo = row[2]
+                if isinstance(conteudo, str):
+                    conteudo = conteudo.replace("\\n", "\n")
                 frases.append({
-                                        'id': row[0],
+                    'id': row[0],
                     'nome': row[1],
-                    'conteudo': row[2],
+                    'conteudo': conteudo,
                     'categoria_principal': row[3],
                     'subcategoria': row[4],
                     'ordem': row[5]
