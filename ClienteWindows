@@ -20,7 +20,7 @@ try:
     REQUESTS_AVAILABLE = True
 except ImportError:
       REQUESTS_AVAILABLE = False
-        requests = None
+    requests = None
 
 try:
   import speech_recognition as sr
