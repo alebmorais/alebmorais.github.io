@@ -16,22 +16,19 @@ from tkinter import messagebox, ttk
 
 try:
     import requests
-
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
-requests = None
+    requests = None
 
 try:
-  import speech_recognition as sr
-
+    import speech_recognition as sr
     SPEECH_AVAILABLE = True
 except ImportError:
     SPEECH_AVAILABLE = False
 
 try:
-  import pyautogui
-
+    import pyautogui
     AUTOGUI_AVAILABLE = True
 except ImportError:
     AUTOGUI_AVAILABLE = False
@@ -39,14 +36,13 @@ except ImportError:
 try:
     import pynput
     from pynput import keyboard
-
     PYNPUT_AVAILABLE = True
 except ImportError:
     PYNPUT_AVAILABLE = False
 
 
 class WindowsDesktopClient:
-def __init__(self):
+    def __init__(self):
         """Inicializar o cliente desktop e configurar dependências."""
         # Verificar se está no Windows
         if platform.system() != "Windows":
@@ -84,7 +80,7 @@ def __init__(self):
             return
 
         try:
-     self.recognizer = sr.Recognizer()
+            self.recognizer = sr.Recognizer()
             self.microphone = sr.Microphone()
 
             # Calibrar para ruído ambiente
@@ -447,8 +443,8 @@ def __init__(self):
                 self.update_status("Conectado ao Pi Zero - Categorias carregadas")
             else:
                 self.update_status("Erro ao conectar com Pi Zero")
-            except Exception as e:
-                self.update_status(f"Não foi possível conectar ao Pi: {e}")
+        except Exception as e:
+            self.update_status(f"Não foi possível conectar ao Pi: {e}")
 
     def update_categories_listbox(self):
         """Atualizar listbox de categorias"""
@@ -698,10 +694,9 @@ def main():
     """Função principal."""
     # Verificar sistema operacional
     if platform.system() != "Windows":
-     print("Este cliente só funciona no Windows.")
+        print("Este cliente só funciona no Windows.")
         print("Para outros sistemas, use a interface web: http://pi.local:8080")
-        return
-
+        sys.exit(0)
 
     print("Iniciando cliente desktop para Windows...")
 
@@ -726,7 +721,7 @@ def main():
 
     # Iniciar cliente
     try:
-       client = WindowsDesktopClient()
+        client = WindowsDesktopClient()
         client.run()
     except Exception as e:
         print(f"Erro ao iniciar cliente: {e}")
