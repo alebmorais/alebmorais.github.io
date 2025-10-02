@@ -301,6 +301,9 @@ class WindowsDesktopClient:
         if not WEBVIEW_AVAILABLE:
             return
         self.pending_webview = True
+        if self.root:
+            self.root.destroy()
+            self.root = None
         self.webview_window = webview.create_window(
             "Automação Médica - Dr. Alessandra Morais",
             self.pi_url,
@@ -308,7 +311,6 @@ class WindowsDesktopClient:
             height=700,
             resizable=True,
         )
-        self.root.quit()
 
     def is_pi_reachable(self, timeout=3):
         """Verificar se a URL do Pi responde."""
@@ -857,7 +859,8 @@ class WindowsDesktopClient:
             return
 
         try:
-            self.root.mainloop()
+            if self.root:
+                self.root.mainloop()
         except KeyboardInterrupt:
             pass
         finally:
