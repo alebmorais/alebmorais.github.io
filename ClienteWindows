@@ -11,6 +11,7 @@ import threading
 import time
 import tkinter as tk
 from tkinter import messagebox, ttk
+from urllib import request as urllib_request
 
 # Tentar importar bibliotecas opcionais
 
@@ -40,6 +41,14 @@ try:
 except ImportError:
     PYNPUT_AVAILABLE = False
 
+try:
+    import webview
+
+    WEBVIEW_AVAILABLE = True
+except ImportError:
+    WEBVIEW_AVAILABLE = False
+    webview = None
+
 
 class WindowsDesktopClient:
     def __init__(self):
@@ -66,12 +75,16 @@ class WindowsDesktopClient:
         self.voice_thread = None
         self.recognizer = None
         self.microphone = None
+        self.webview_window = None
+        self.ui_mode = None
+        self.pending_webview = False
 
         # Inicializar
         self.setup_voice_recognition()
         self.setup_gui()
-        self.setup_keyboard_shortcuts()
-        self.load_categories()
+        if self.ui_mode == "legacy":
+            self.setup_keyboard_shortcuts()
+            self.load_categories()
 
     def setup_voice_recognition(self):
         """Configurar reconhecimento de voz se disponível"""
@@ -93,32 +106,51 @@ class WindowsDesktopClient:
             self.recognizer = None
 
     def setup_gui(self):
-        """Criar interface desktop com tema azul escuro"""
+        """Criar interface do cliente."""
+        self.colors = {
+            "bg_primary": "#1a237e",
+            "bg_secondary": "#283593",
+            "bg_accent": "#3f51b5",
+            "text_primary": "#ffffff",
+            "text_secondary": "#e8eaf6",
+            "button_active": "#4caf50",
+            "button_hover": "#66bb6a",
+            "border": "#5c6bc0",
+        }
+
+        pi_reachable = self.is_pi_reachable()
+
+        if WEBVIEW_AVAILABLE and pi_reachable:
+            self.ui_mode = "webview"
+            self.webview_window = webview.create_window(
+                "Automação Médica - Dr. Alessandra Morais",
+                self.pi_url,
+                width=1000,
+                height=700,
+                resizable=True,
+            )
+            return
+
         self.root = tk.Tk()
         self.root.title("Automação Médica - Dr. Alessandra Morais")
         self.root.geometry("1000x700")
-        self.root.configure(bg="#1a237e")  # Azul escuro
-
-        # Configurar como sempre no topo
+        self.root.configure(bg=self.colors["bg_primary"])
         self.root.attributes("-topmost", True)
 
-        # Cores do tema
-        self.colors = {
-            "bg_primary": "#1a237e",  # Azul escuro principal
-            "bg_secondary": "#283593",  # Azul médio
-            "bg_accent": "#3f51b5",  # Azul claro
-            "text_primary": "#ffffff",  # Branco
-            "text_secondary": "#e8eaf6",  # Branco levemente azulado
-            "button_active": "#4caf50",  # Verde
-            "button_hover": "#66bb6a",  # Verde claro
-            "border": "#5c6bc0",  # Azul para bordas
-        }
+        if not pi_reachable:
+            self.ui_mode = "fallback"
+            self.build_offline_screen()
+            return
 
-        # Configurar estilo ttk
+        if not WEBVIEW_AVAILABLE:
+            print(
+                "pywebview não foi encontrado. Utilizando interface Tkinter tradicional."
+            )
+
+        self.ui_mode = "legacy"
+
         style = ttk.Style()
         style.theme_use("clam")
-
-        # Estilos customizados
         style.configure("Dark.TFrame", background=self.colors["bg_primary"])
         style.configure(
             "Dark.TLabel",
@@ -145,12 +177,128 @@ class WindowsDesktopClient:
         self.create_preview_area()
         self.create_status_bar()
 
-        # Focar na janela para receber eventos de teclado
         self.root.focus_set()
-
-        # Bind para fechar com ESC
         self.root.bind("<Escape>", lambda e: self.toggle_minimize())
         self.root.bind("<F11>", lambda e: self.toggle_fullscreen())
+
+    def build_offline_screen(self):
+        """Exibir mensagem simples quando o Pi estiver offline."""
+        container = tk.Frame(self.root, bg=self.colors["bg_primary"])
+        container.pack(expand=True, fill=tk.BOTH, padx=40, pady=40)
+
+        title = tk.Label(
+            container,
+            text="Não foi possível acessar o Raspberry Pi.",
+            bg=self.colors["bg_primary"],
+            fg=self.colors["text_primary"],
+            font=("Segoe UI", 18, "bold"),
+            wraplength=600,
+            justify="center",
+        )
+        title.pack(pady=(0, 20))
+
+        self.fallback_status_var = tk.StringVar(
+            value=(
+                "Verifique se o Raspberry Pi está ligado e conectado à mesma rede. "
+                "Depois, tente novamente."
+            )
+        )
+        status_label = tk.Label(
+            container,
+            textvariable=self.fallback_status_var,
+            bg=self.colors["bg_primary"],
+            fg=self.colors["text_secondary"],
+            font=("Segoe UI", 11),
+            wraplength=600,
+            justify="center",
+        )
+        status_label.pack(pady=(0, 20))
+
+        button_frame = tk.Frame(container, bg=self.colors["bg_primary"])
+        button_frame.pack()
+
+        retry_button = tk.Button(
+            button_frame,
+            text="Tentar novamente",
+            command=self.retry_connection,
+            bg=self.colors["button_active"],
+            fg=self.colors["text_primary"],
+            font=("Segoe UI", 11, "bold"),
+            padx=16,
+            pady=8,
+        )
+        retry_button.pack(side=tk.LEFT, padx=10)
+
+        close_button = tk.Button(
+            button_frame,
+            text="Fechar",
+            command=self.root.destroy,
+            bg=self.colors["bg_accent"],
+            fg=self.colors["text_primary"],
+            font=("Segoe UI", 11, "bold"),
+            padx=16,
+            pady=8,
+        )
+        close_button.pack(side=tk.LEFT, padx=10)
+
+        if not WEBVIEW_AVAILABLE:
+            note = tk.Label(
+                container,
+                text=(
+                    "Observação: instale o pacote 'pywebview' para carregar a interface "
+                    "web moderna diretamente no aplicativo."
+                ),
+                bg=self.colors["bg_primary"],
+                fg=self.colors["text_secondary"],
+                font=("Segoe UI", 10),
+                wraplength=600,
+                justify="center",
+            )
+            note.pack(pady=(20, 0))
+
+    def retry_connection(self):
+        """Tentar reconectar ao Pi e abrir a webview se possível."""
+        if not self.is_pi_reachable():
+            self.fallback_status_var.set(
+                "Ainda não foi possível conectar. Confira os cabos/rede e tente novamente."
+            )
+            return
+
+        if WEBVIEW_AVAILABLE:
+            self.fallback_status_var.set(
+                "Conexão restabelecida! Abrindo a interface web..."
+            )
+            self.root.after(200, self._open_webview_after_fallback)
+        else:
+            self.fallback_status_var.set(
+                "Conectado ao Pi! Instale o pacote 'pywebview' e reabra o aplicativo "
+                "para usar a interface moderna."
+            )
+
+    def _open_webview_after_fallback(self):
+        """Encerrar Tk e abrir a webview."""
+        if not WEBVIEW_AVAILABLE:
+            return
+        self.pending_webview = True
+        self.webview_window = webview.create_window(
+            "Automação Médica - Dr. Alessandra Morais",
+            self.pi_url,
+            width=1000,
+            height=700,
+            resizable=True,
+        )
+        self.root.quit()
+
+    def is_pi_reachable(self, timeout=3):
+        """Verificar se a URL do Pi responde."""
+        try:
+            if REQUESTS_AVAILABLE:
+                response = requests.get(self.pi_url, timeout=timeout)
+                return response.status_code < 500
+            with urllib_request.urlopen(self.pi_url, timeout=timeout) as response:
+                return 200 <= getattr(response, "status", 200) < 500
+        except Exception:
+            return False
 
     def create_header(self):
         """Criar cabeçalho"""
@@ -656,6 +804,8 @@ class WindowsDesktopClient:
 
     def toggle_minimize(self):
         """Alternar minimização"""
+        if not self.root:
+            return
         if self.root.state() == "normal":
             self.root.iconify()
         else:
@@ -664,16 +814,25 @@ class WindowsDesktopClient:
 
     def toggle_fullscreen(self):
         """Alternar tela cheia"""
+        if not self.root:
+            return
         current = self.root.attributes("-fullscreen")
         self.root.attributes("-fullscreen", not current)
 
     def update_status(self, message):
         """Atualizar barra de status"""
-        self.status_bar.config(text=message)
+        if hasattr(self, "status_bar") and self.status_bar:
+            self.status_bar.config(text=message)
+        else:
+            print(message)
 
     def run(self):
         """Executar aplicação"""
         if platform.system() != "Windows":
+            return
+
+        if self.ui_mode == "webview":
+            self.start_webview_runtime()
             return
 
         try:
@@ -683,11 +842,24 @@ class WindowsDesktopClient:
         finally:
             self.cleanup()
 
+        if self.pending_webview:
+            self.ui_mode = "webview"
+            self.start_webview_runtime()
+
     def cleanup(self):
         """Limpeza ao fechar"""
         self.voice_active = False
         if hasattr(self, "keyboard_listener"):
             self.keyboard_listener.stop()
+
+    def start_webview_runtime(self):
+        """Iniciar o loop da webview se disponível."""
+        if not WEBVIEW_AVAILABLE or not self.webview_window:
+            return
+        try:
+            webview.start()
+        except Exception as exc:
+            print(f"Erro ao iniciar a webview: {exc}")
 
 
 def main():
