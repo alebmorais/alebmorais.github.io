@@ -287,8 +287,6 @@ class WindowsDesktopClient:
             height=700,
             resizable=True,
         )
-        self.root.quit()
-
     def is_pi_reachable(self, timeout=3):
         """Verificar se a URL do Pi responde."""
         try:
@@ -297,7 +295,6 @@ class WindowsDesktopClient:
                 return response.status_code < 500
             with urllib_request.urlopen(self.pi_url, timeout=timeout) as response:
                 return 200 <= getattr(response, "status", 200) < 500
-        except Exception:
             return False
 
     def create_header(self):
@@ -836,7 +833,8 @@ class WindowsDesktopClient:
             return
 
         try:
-            self.root.mainloop()
+            if self.root:
+                self.root.mainloop()
         except KeyboardInterrupt:
             pass
         finally:
@@ -859,9 +857,7 @@ class WindowsDesktopClient:
         try:
             webview.start()
         except Exception as exc:
-            print(f"Erro ao iniciar a webview: {exc}")
-
-
+          
 def main():
     """Função principal."""
     # Verificar sistema operacional
