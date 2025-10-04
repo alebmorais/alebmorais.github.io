@@ -320,7 +320,7 @@ class WindowsDesktopClient:
                 return response.status_code < 500
             with urllib_request.urlopen(self.pi_url, timeout=timeout) as response:
                 return 200 <= getattr(response, "status", 200) < 500
-        except Exception:
+        except (requests.exceptions.RequestException, urllib_request.URLError):
             return False
 
     def create_header(self):
