@@ -320,7 +320,6 @@ class WindowsDesktopClient:
                 return response.status_code < 500
             with urllib_request.urlopen(self.pi_url, timeout=timeout) as response:
                 return 200 <= getattr(response, "status", 200) < 500
-        except Exception:
             return False
 
     def create_header(self):
@@ -883,9 +882,6 @@ class WindowsDesktopClient:
         try:
             webview.start()
         except Exception as exc:
-            print(f"Erro ao iniciar a webview: {exc}")
-
-
 def main():
     """Função principal."""
     # Verificar sistema operacional
@@ -920,9 +916,5 @@ def main():
         client = WindowsDesktopClient()
         client.run()
     except Exception as e:
-        print(f"Erro ao iniciar cliente: {e}")
-        pause_for_user("Pressione Enter para sair...")
-
-
 if __name__ == "__main__":
     main()

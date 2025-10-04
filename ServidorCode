@@ -976,12 +976,10 @@ def run_server():
         WebRequestHandler(*args, automation_server=automation_server, **kwargs)
     server_address = ('', 8080)
     httpd = HTTPServer(server_address, handler)
-    print(f"Monitor de rede iniciado
         ✅ Servidor configurado com sucesso!
         📱 Acesse: http://pi.local:8080
-        🌐 Ou pelo IP: http://192.168.0.18:8080
+        🌐 Ou pelo IP: http://localhost:8080
         💻 Funciona em qualquer dispositivo na rede
-        ⚡ Pressione Ctrl+C para parar o servidor")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
