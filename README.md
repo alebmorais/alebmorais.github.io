@@ -28,10 +28,8 @@ Se o Raspberry Pi não puder ser alcançado, o cliente mostra uma tela simples c
 ### Execução
 
 ```powershell
-py ClienteWindows2.py
+py ClienteWindows
 ```
-
-O arquivo `ClienteWindows` mantém uma versão alternativa com os mesmos aprimoramentos e pode ser invocado da mesma forma.
 
 ---
 
