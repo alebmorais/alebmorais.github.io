@@ -883,7 +883,7 @@ class WindowsDesktopClient:
         try:
             webview.start()
         except Exception as exc:
-            print(f"Erro ao iniciar a webview: {exc}")
+            print(f"Erro ao iniciar a webview: {type(exc).__name__} - {exc}")
 
 
 def main():
