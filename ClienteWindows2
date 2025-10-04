@@ -920,8 +920,8 @@ def main():
         client = WindowsDesktopClient()
         client.run()
     except Exception as e:
-        print(f"Erro ao iniciar cliente: {e}")
-        pause_for_user("Pressione Enter para sair...")
+    except Exception as e:
+        print(f"Erro inesperado ao iniciar cliente: {type(e).__name__} - {e}")
 
 
 if __name__ == "__main__":
