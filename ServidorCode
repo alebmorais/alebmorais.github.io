@@ -10,6 +10,7 @@ import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 import traceback
+import socket
 
 class MedicalAutomationServer:
     def __init__(self, db_path='/home/pi/automation.db'):
@@ -969,6 +970,24 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 </html>'''
 
 
+def get_local_ip():
+    """Get the local IP address of the machine"""
+    try:
+        # Create a socket to get the IP address used for network communication
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Connect to an external address (doesn't actually send data)
+        s.connect(("8.8.8.8", 80))
+        ip_address = s.getsockname()[0]
+        s.close()
+        return ip_address
+    except Exception:
+        # Fallback to hostname resolution if unable to determine IP
+        try:
+            return socket.gethostbyname(socket.gethostname())
+        except Exception:
+            return "127.0.0.1"
+
+
 def run_server():
     db_path = os.environ.get('DB_PATH', '/home/pi/automation.db')
     automation_server = MedicalAutomationServer(db_path=db_path)
@@ -976,10 +995,11 @@ def run_server():
         WebRequestHandler(*args, automation_server=automation_server, **kwargs)
     server_address = ('', 8080)
     httpd = HTTPServer(server_address, handler)
+    local_ip = get_local_ip()
     print(f"""Monitor de rede iniciado
         ✅ Servidor configurado com sucesso!
         📱 Acesse: http://pi.local:8080
-        🌐 Ou pelo IP: http://192.168.0.18:8080
+        🌐 Ou pelo IP: http://{local_ip}:8080
         💻 Funciona em qualquer dispositivo na rede
         ⚡ Pressione Ctrl+C para parar o servidor""")
     try:
