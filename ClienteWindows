@@ -13,6 +13,24 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from urllib import request as urllib_request
 
+# Função utilitária para lidar com pausas sem depender de input() em ambientes
+# onde stdin pode não estar disponível (ex: execução por atalho ou como
+# aplicativo empacotado).
+def pause_for_user(prompt, delay_seconds=3):
+    """Exibe uma mensagem de pausa sem exigir entrada quando stdin não existe."""
+    try:
+        if sys.stdin and sys.stdin.isatty():
+            input(prompt)
+            return
+    except (EOFError, RuntimeError):
+        pass
+
+    # Ambiente não interativo: apenas informar e aguardar brevemente para que
+    # o usuário leia a mensagem.
+    message = prompt.strip() or "Pressione Enter para continuar..."
+    print(message)
+    time.sleep(max(delay_seconds, 0))
+
 # Tentar importar bibliotecas opcionais
 
 try:
@@ -107,15 +125,16 @@ class WindowsDesktopClient:
 
     def setup_gui(self):
         """Criar interface do cliente."""
+        # Paleta comum para fallback/legado
         self.colors = {
-            "bg_primary": "#1a237e",
-            "bg_secondary": "#283593",
-            "bg_accent": "#3f51b5",
-            "text_primary": "#ffffff",
-            "text_secondary": "#e8eaf6",
-            "button_active": "#4caf50",
-            "button_hover": "#66bb6a",
-            "border": "#5c6bc0",
+            "bg_primary": "#1a237e",  # Azul escuro principal
+            "bg_secondary": "#283593",  # Azul médio
+            "bg_accent": "#3f51b5",  # Azul claro
+            "text_primary": "#ffffff",  # Branco
+            "text_secondary": "#e8eaf6",  # Branco levemente azulado
+            "button_active": "#4caf50",  # Verde
+            "button_hover": "#66bb6a",  # Verde claro
+            "border": "#5c6bc0",  # Azul para bordas
         }
 
         pi_reachable = self.is_pi_reachable()
@@ -131,6 +150,7 @@ class WindowsDesktopClient:
             )
             return
 
+        # Necessário criar janela Tk para fallback ou interface legada
         self.root = tk.Tk()
         self.root.title("Automação Médica - Dr. Alessandra Morais")
         self.root.geometry("1000x700")
@@ -142,6 +162,7 @@ class WindowsDesktopClient:
             self.build_offline_screen()
             return
 
+        # Quando pywebview não está disponível, mantemos a UI Tk existente
         if not WEBVIEW_AVAILABLE:
             print(
                 "pywebview não foi encontrado. Utilizando interface Tkinter tradicional."
@@ -149,6 +170,7 @@ class WindowsDesktopClient:
 
         self.ui_mode = "legacy"
 
+        # Configurar estilo ttk apenas no modo legado
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("Dark.TFrame", background=self.colors["bg_primary"])
@@ -182,7 +204,7 @@ class WindowsDesktopClient:
         self.root.bind("<F11>", lambda e: self.toggle_fullscreen())
 
     def build_offline_screen(self):
-        """Exibir mensagem simples quando o Pi estiver offline."""
+        """Exibir tela simples informando ausência de conexão."""
         container = tk.Frame(self.root, bg=self.colors["bg_primary"])
         container.pack(expand=True, fill=tk.BOTH, padx=40, pady=40)
 
@@ -197,12 +219,11 @@ class WindowsDesktopClient:
         )
         title.pack(pady=(0, 20))
 
-        self.fallback_status_var = tk.StringVar(
-            value=(
-                "Verifique se o Raspberry Pi está ligado e conectado à mesma rede. "
-                "Depois, tente novamente."
-            )
+        instructions = (
+            "Verifique se o Raspberry Pi está ligado e conectado à rede. "
+            "Conecte o computador ao mesmo Wi-Fi ou cabo e tente novamente."
         )
+        self.fallback_status_var = tk.StringVar(value=instructions)
         status_label = tk.Label(
             container,
             textvariable=self.fallback_status_var,
@@ -276,7 +297,7 @@ class WindowsDesktopClient:
             )
 
     def _open_webview_after_fallback(self):
-        """Encerrar Tk e abrir a webview."""
+        """Encerrar a janela Tk e preparar a webview."""
         if not WEBVIEW_AVAILABLE:
             return
         self.pending_webview = True
@@ -892,15 +913,14 @@ def main():
             print(f"  - {dep}")
         print("Para instalar: pip install " + " ".join(missing_deps))
         print("O cliente funcionará com funcionalidades limitadas.")
-        input("Pressione Enter para continuar...")
+        pause_for_user("Pressione Enter para continuar...")
 
     # Iniciar cliente
     try:
         client = WindowsDesktopClient()
         client.run()
     except Exception as e:
-        print(f"Erro ao iniciar cliente: {e}")
-        input("Pressione Enter para sair...")
+        print(f"Erro inesperado ao iniciar cliente: {type(e).__name__} - {e}")
 
 
 if __name__ == "__main__":
