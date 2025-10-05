@@ -6,6 +6,15 @@ CREATE TABLE frases (
     subcategoria TEXT NOT NULL,
     ordem INTEGER DEFAULT 0
 );
+-- Creates an index on the main category column for faster filtering.
+CREATE INDEX idx_categoria_principal ON frases (categoria_principal);
+
+-- Creates an index on the subcategory column for faster filtering.
+CREATE INDEX idx_subcategoria ON frases (subcategoria);
+
+-- Creates a composite index for queries that filter by BOTH main category and subcategory.
+-- This is the most important index for your application's performance.
+CREATE INDEX idx_categoria_subcategoria ON frases (categoria_principal, subcategoria);
 
 INSERT INTO frases (nome, conteudo, categoria_principal, subcategoria, ordem) VALUES 
 
