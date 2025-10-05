@@ -923,7 +923,8 @@ class WindowsDesktopClient:
                             "Interface web indisponível. Utilizando modo legado."
                         ),
                     )
-                except Exception:
+                except Exception as e:
+                    print(f"Falha ao agendar atualização de status: {e}")
                     self.update_status("Interface web indisponível. Utilizando modo legado.")
 
             return False
