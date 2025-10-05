@@ -332,7 +332,9 @@ class WindowsDesktopClient:
             with urllib_request.urlopen(self.pi_url, timeout=timeout) as response:
                 return 200 <= getattr(response, "status", 200) < 500
             return False
-        except Exception:
+        except Exception as e:
+            print(f"Falha ao verificar a disponibilidade do Pi: {e}")
+            traceback.print_exc()
             return False
 
     def create_header(self):
