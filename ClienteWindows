@@ -12,6 +12,7 @@ import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 from urllib import request as urllib_request
+import traceback
 
 # Função utilitária para lidar com pausas sem depender de input() em ambientes
 # onde stdin pode não estar disponível (ex: execução por atalho ou como
@@ -96,13 +97,22 @@ class WindowsDesktopClient:
         self.webview_window = None
         self.ui_mode = None
         self.pending_webview = False
+        self.force_legacy_ui = False
+        self.legacy_initialized = False
 
         # Inicializar
         self.setup_voice_recognition()
         self.setup_gui()
         if self.ui_mode == "legacy":
-            self.setup_keyboard_shortcuts()
-            self.load_categories()
+            self.initialize_legacy_mode()
+
+    def initialize_legacy_mode(self):
+        """Ensure that legacy mode helpers are configured only once."""
+        if self.legacy_initialized:
+            return
+        self.setup_keyboard_shortcuts()
+        self.load_categories()
+        self.legacy_initialized = True
 
     def setup_voice_recognition(self):
         """Configurar reconhecimento de voz se disponível"""
@@ -139,7 +149,7 @@ class WindowsDesktopClient:
 
         pi_reachable = self.is_pi_reachable()
 
-        if WEBVIEW_AVAILABLE and pi_reachable:
+        if WEBVIEW_AVAILABLE and pi_reachable and not self.force_legacy_ui:
             self.ui_mode = "webview"
             self.webview_window = webview.create_window(
                 "Automação Médica - Dr. Alessandra Morais",
@@ -301,6 +311,7 @@ class WindowsDesktopClient:
         if not WEBVIEW_AVAILABLE:
             return
         self.pending_webview = True
+        self.force_legacy_ui = False
         if self.root:
             self.root.destroy()
             self.root = None
@@ -320,6 +331,8 @@ class WindowsDesktopClient:
                 return response.status_code < 500
             with urllib_request.urlopen(self.pi_url, timeout=timeout) as response:
                 return 200 <= getattr(response, "status", 200) < 500
+            return False
+        except Exception:
             return False
 
     def create_header(self):
@@ -854,8 +867,9 @@ class WindowsDesktopClient:
             return
 
         if self.ui_mode == "webview":
-            self.start_webview_runtime()
-            return
+            webview_started = self.start_webview_runtime()
+            if webview_started:
+                return
 
         try:
             if self.root:
@@ -878,10 +892,39 @@ class WindowsDesktopClient:
     def start_webview_runtime(self):
         """Iniciar o loop da webview se disponível."""
         if not WEBVIEW_AVAILABLE or not self.webview_window:
-            return
+            return False
         try:
             webview.start()
+            return True
         except Exception as exc:
+            error_message = f"Erro ao iniciar a interface web: {exc}"
+            print(error_message)
+            traceback.print_exc()
+            pause_for_user(
+                "Não foi possível abrir a interface web. Pressione Enter para continuar no modo legado.",
+                delay_seconds=2,
+            )
+            self.pending_webview = False
+            self.webview_window = None
+            self.force_legacy_ui = True
+
+            if not self.root:
+                self.setup_gui()
+                if self.ui_mode == "legacy":
+                    self.initialize_legacy_mode()
+
+            if self.root:
+                try:
+                    self.root.after(
+                        0,
+                        lambda: self.update_status(
+                            "Interface web indisponível. Utilizando modo legado."
+                        ),
+                    )
+                except Exception:
+                    self.update_status("Interface web indisponível. Utilizando modo legado.")
+
+            return False
 def main():
     """Função principal."""
     # Verificar sistema operacional
@@ -916,5 +959,8 @@ def main():
         client = WindowsDesktopClient()
         client.run()
     except Exception as e:
+        print(f"Erro inesperado ao executar o cliente: {e}")
+        traceback.print_exc()
+        pause_for_user("Ocorreu um erro inesperado. Pressione Enter para sair.")
 if __name__ == "__main__":
     main()
