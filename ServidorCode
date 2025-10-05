@@ -10,153 +10,30 @@ import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 import traceback
+import socket
 
 class MedicalAutomationServer:
-    def __init__(self, db_path=None):
-        self.base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.db_path = self.resolve_database_path(db_path)
+    def __init__(self, db_path='/home/pi/automation.db'):
+        self.db_path = db_path
         self.verify_database()
 
-    def resolve_database_path(self, preferred_path):
-        """Determina o caminho do banco considerando múltiplas possibilidades."""
-        candidates = []
-
-        # Ordem de preferência: argumento explícito, variáveis de ambiente e caminhos padrões.
-        if preferred_path:
-            candidates.append(preferred_path)
-
-        env_candidates = [
-            os.environ.get("AUTOMATION_DB_PATH"),
-            os.environ.get("DB_PATH"),
-        ]
-        candidates.extend(filter(None, env_candidates))
-
-        # Caminhos relativos ao arquivo atual e ao diretório pai (para execução fora do repo).
-        script_dir = self.base_dir
-        parent_dir = os.path.dirname(script_dir)
-        default_locations = [
-            os.path.join(script_dir, "automation.db"),
-            os.path.join(script_dir, "database", "automation.db"),
-            os.path.join(parent_dir, "automation.db"),
-            os.path.join(parent_dir, "database", "automation.db"),
-        ]
-        candidates.extend(default_locations)
-
-        normalized = []
-        seen = set()
-        for path in candidates:
-            if not path:
-                continue
-            full_path = os.path.abspath(os.path.expanduser(path))
-            if full_path not in seen:
-                normalized.append(full_path)
-                seen.add(full_path)
-
-        if not normalized:
-            return os.path.join(script_dir, "automation.db")
-
-        for path in normalized:
-            if os.path.exists(path):
-                return path
-
-        # Nenhum caminho existente encontrado: usar o primeiro candidato para tentar criar o banco.
-        return normalized[0]
-
-    def verify_database(self, rebuilt=False):
+    def verify_database(self):
         """Verificar se banco de dados existe e tem dados"""
         if not os.path.exists(self.db_path):
-            print(f"AVISO: Banco de dados não encontrado em {self.db_path}")
-            print("Tentando criar automaticamente a partir do arquivo SQL de referência...")
-            if self.bootstrap_database(overwrite=False):
-                self.verify_database(rebuilt=True)
-                return
-            print("ERRO: Não foi possível localizar ou criar o banco de dados.")
+            print(f"ERRO: Banco de dados não encontrado em {self.db_path}")
             sys.exit(1)
-
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.execute("SELECT COUNT(*) FROM frases")
             count = cursor.fetchone()[0]
             conn.close()
             if count == 0:
-                if not rebuilt and self.bootstrap_database(overwrite=True):
-                    self.verify_database(rebuilt=True)
-                    return
                 print("AVISO: Banco de dados vazio")
             else:
                 print(f"✓ Banco de dados OK: {count} frases encontradas")
         except Exception as e:
             print(f"ERRO no banco de dados: {e}")
-            if not rebuilt and self.bootstrap_database(overwrite=True):
-                self.verify_database(rebuilt=True)
-                return
             sys.exit(1)
-
-    def bootstrap_database(self, overwrite=False):
-        """Cria o banco a partir de um arquivo SQL se disponível."""
-        sql_candidates = self.find_sql_candidates()
-        if not sql_candidates:
-            print("Nenhum arquivo SQL de referência encontrado para criar o banco de dados.")
-            return False
-
-        target_dir = os.path.dirname(self.db_path)
-        if target_dir and not os.path.exists(target_dir):
-            try:
-                os.makedirs(target_dir, exist_ok=True)
-            except OSError as err:
-                print(f"Erro ao criar diretório do banco de dados: {err}")
-                return False
-
-        if overwrite and os.path.exists(self.db_path):
-            try:
-                os.remove(self.db_path)
-            except OSError as err:
-                print(f"Não foi possível remover o banco de dados antigo: {err}")
-                return False
-
-        for sql_path in sql_candidates:
-            try:
-                with open(sql_path, "r", encoding="utf-8") as sql_file:
-                    script = sql_file.read()
-                with sqlite3.connect(self.db_path) as conn:
-                    conn.executescript(script)
-                print(f"✓ Banco de dados criado em {self.db_path} a partir de {sql_path}")
-                return True
-            except Exception as err:
-                print(f"Falha ao criar banco de dados a partir de {sql_path}: {err}")
-
-        return False
-
-    def find_sql_candidates(self):
-        """Retorna possíveis caminhos de arquivos SQL para popular o banco."""
-        candidates = []
-        locations = [self.base_dir, os.path.dirname(self.base_dir)]
-        file_names = [
-            "SQL_File.sql",
-            "SQL_File",
-            "database.sql",
-            "automation.sql",
-        ]
-
-        for location in locations:
-            if not location:
-                continue
-            for name in file_names:
-                candidates.append(os.path.join(location, name))
-            candidates.append(os.path.join(location, "database", "SQL_File.sql"))
-            candidates.append(os.path.join(location, "database", "SQL_File"))
-            candidates.append(os.path.join(location, "database", "automation.sql"))
-
-        existing = []
-        seen = set()
-        for path in candidates:
-            full_path = os.path.abspath(path)
-            if full_path in seen:
-                continue
-            seen.add(full_path)
-            if os.path.exists(full_path):
-                existing.append(full_path)
-        return existing
 
     def get_categorias_principais(self):
         """Buscar categorias principais"""
@@ -1093,14 +970,38 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 </html>'''
 
 
+def get_local_ip():
+    """Get the local IP address of the machine"""
+    try:
+        # Create a socket to get the IP address used for network communication
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Connect to an external address (doesn't actually send data)
+        s.connect(("8.8.8.8", 80))
+        ip_address = s.getsockname()[0]
+        s.close()
+        return ip_address
+    except Exception:
+        # Fallback to hostname resolution if unable to determine IP
+        try:
+            return socket.gethostbyname(socket.gethostname())
+        except Exception:
+            return "127.0.0.1"
+
+
 def run_server():
-    db_path = os.environ.get('AUTOMATION_DB_PATH') or os.environ.get('DB_PATH')
+    db_path = os.environ.get('DB_PATH', '/home/pi/automation.db')
     automation_server = MedicalAutomationServer(db_path=db_path)
     def handler(*args, **kwargs):
         WebRequestHandler(*args, automation_server=automation_server, **kwargs)
     server_address = ('', 8080)
     httpd = HTTPServer(server_address, handler)
-    print(f"Servidor rodando em http://localhost:8080 usando banco {automation_server.db_path}")
+    local_ip = get_local_ip()
+    print(f"""Monitor de rede iniciado
+        ✅ Servidor configurado com sucesso!
+        📱 Acesse: http://pi.local:8080
+        🌐 Ou pelo IP: http://{local_ip}:8080
+        💻 Funciona em qualquer dispositivo na rede
+        ⚡ Pressione Ctrl+C para parar o servidor""")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
