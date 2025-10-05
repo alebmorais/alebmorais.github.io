@@ -88,7 +88,7 @@ Ambas as versões expõem a interface em `http://pi.local:8080` (ou `http://<ip-
 - `DB_PATH`: caminho absoluto para o arquivo `automation.db` utilizado pelo `ServidorCode`.
 - `AUTOMATION_DB_PATH`: caminho preferencial para o banco no `ServidorCode2` (se ausente, ele volta para `DB_PATH`).
 
-Se nenhuma variável estiver definida, ambos os servidores tentam utilizar `/home/pi/automation.db`. A versão 2 também procura automaticamente por arquivos como `automation.db` ou `database/automation.db` no diretório do script e no diretório pai.
+Se nenhuma variável estiver definida, o `ServidorCode` utiliza como padrão `/home/pi/automation.db`. A versão 2, por sua vez, procura automaticamente por arquivos como `automation.db` ou `database/automation.db` no diretório do script e no diretório pai.
 
 ### Preparando o banco `automation.db`
 
