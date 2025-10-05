@@ -2,36 +2,6 @@
 
 Este repositório contém experimentos e protótipos utilizados na automação do consultório da Dra. Alessandra Morais. Os artefatos principais são o servidor web (Raspberry Pi) e o cliente desktop para Windows.
 
-## Servidor Raspberry Pi
-
-O servidor foi concebido para rodar em um Raspberry Pi com Python 3 e banco de dados SQLite. Antes de iniciar a aplicação, garanta que:
-
-1. **Python 3.10+** esteja instalado (`sudo apt install python3 python3-pip`).
-2. **sqlite3** esteja disponível para administrar o banco (`sudo apt install sqlite3`).
-3. Existe um banco SQLite acessível pelo usuário que executará o serviço.
-
-Por padrão, o servidor procura o arquivo de banco de dados em `/home/pi/automation.db`. Caso o arquivo esteja em outro local, defina a variável de ambiente `DB_PATH` antes de iniciar o serviço:
-
-```bash
-export DB_PATH=/caminho/para/seu/automation.db
-```
-
-Inicie o serviço a partir da raiz do repositório executando o script principal:
-
-```bash
-python3 ServidorCode
-```
-
-Após a inicialização, o servidor fica disponível na porta configurada (padrão `8080`). Na mesma rede, acesse `http://pi.local:8080` ou `http://<ip-do-raspberry>:8080` em um navegador para utilizar a interface.
-
-Para uma instalação nova, você pode criar o banco inicial executando os scripts SQL fornecidos. Em um terminal, rode:
-
-```bash
-sqlite3 /home/pi/automation.db < SQL_2
-```
-
-Se você renomear ou dividir esses arquivos, ajuste os comandos conforme necessário. Isso garante que todas as tabelas e dados mínimos sejam criados antes de iniciar o servidor.
-
 ## Cliente Desktop Windows
 
 O cliente Windows foi atualizado para reutilizar diretamente a interface web hospedada no Raspberry Pi. Para isso ele abre um _webview_ leve apontando para `http://pi.local:8080` sempre que o dispositivo está acessível.
@@ -58,8 +28,9 @@ Se o Raspberry Pi não puder ser alcançado, o cliente mostra uma tela simples c
 ### Execução
 
 ```powershell
-py ClienteWindows
 ```
+
+O arquivo `ClienteWindows` mantém uma versão alternativa com os mesmos aprimoramentos e pode ser invocado da mesma forma.
 
 ---
 
