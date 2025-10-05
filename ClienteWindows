@@ -322,9 +322,11 @@ class WindowsDesktopClient:
                 return 200 <= getattr(response, "status", 200) < 500
         except urllib_request.URLError:
             return False
-        except Exception:
-            # Catch requests.exceptions.RequestException when requests is available
-            # or any other unexpected error
+        except Exception as e:
+            # Captura `requests.exceptions.RequestException` de forma segura, sem causar um `NameError`
+            # se a biblioteca `requests` não estiver instalada.
+            if not (REQUESTS_AVAILABLE and isinstance(e, requests.exceptions.RequestException)):
+                raise  # Relança exceções inesperadas para não mascarar bugs.
             return False
 
     def create_header(self):
