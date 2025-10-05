@@ -27,7 +27,6 @@ Após a inicialização, o servidor fica disponível na porta configurada (padr�
 Para uma instalação nova, você pode criar o banco inicial executando os scripts SQL fornecidos. Em um terminal, rode:
 
 ```bash
-sqlite3 /home/pi/automation.db < SQL_File
 sqlite3 /home/pi/automation.db < SQL_2
 ```
 
