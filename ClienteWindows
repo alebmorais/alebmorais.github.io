@@ -41,11 +41,7 @@ except ImportError:
     REQUESTS_AVAILABLE = False
     requests = None
 
-try:
-    import speech_recognition as sr
-    SPEECH_AVAILABLE = True
-except ImportError:
-    SPEECH_AVAILABLE = False
+
 
 try:
     import pyautogui
@@ -79,7 +75,7 @@ class WindowsDesktopClient:
 
         # Configurações
         self.pi_url = "http://pi.local:8080"
-        self.voice_active = False
+        
         self.current_phrase = None
 
         # Dados
@@ -91,9 +87,8 @@ class WindowsDesktopClient:
 
         # Interface
         self.root = None
-        self.voice_thread = None
-        self.recognizer = None
-        self.microphone = None
+        
+        
         self.webview_window = None
         self.ui_mode = None
         self.pending_webview = False
@@ -101,7 +96,7 @@ class WindowsDesktopClient:
         self.legacy_initialized = False
 
         # Inicializar
-        self.setup_voice_recognition()
+        
         self.setup_gui()
         if self.ui_mode == "legacy":
             self.initialize_legacy_mode()
@@ -114,24 +109,7 @@ class WindowsDesktopClient:
         self.load_categories()
         self.legacy_initialized = True
 
-    def setup_voice_recognition(self):
-        """Configurar reconhecimento de voz se disponível"""
-        if not SPEECH_AVAILABLE:
-            print("Reconhecimento de voz não disponível")
-            return
-
-        try:
-            self.recognizer = sr.Recognizer()
-            self.microphone = sr.Microphone()
-
-            # Calibrar para ruído ambiente
-            with self.microphone as source:
-                self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
-
-            print("Reconhecimento de voz configurado")
-        except Exception as e:
-            print(f"Erro ao configurar voz: {e}")
-            self.recognizer = None
+    
 
     def setup_gui(self):
         """Criar interface do cliente."""
@@ -204,7 +182,7 @@ class WindowsDesktopClient:
         )
 
         self.create_header()
-        self.create_voice_controls()
+        
         self.create_navigation_area()
         self.create_preview_area()
         self.create_status_bar()
@@ -363,49 +341,7 @@ class WindowsDesktopClient:
         )
         subtitle_label.pack()
 
-    def create_voice_controls(self):
-        """Criar controles de voz"""
-        voice_frame = tk.Frame(self.root, bg=self.colors["bg_primary"], height=60)
-        voice_frame.pack(fill=tk.X, padx=10, pady=5)
-        voice_frame.pack_propagate(False)
-
-        # Botão de voz
-        self.voice_button = tk.Button(
-            voice_frame,
-            text=(
-                "🎤 Ativar Comando de Voz"
-                if SPEECH_AVAILABLE
-                else "🎤 Voz Indisponível"
-            ),
-            bg=self.colors["button_active"] if SPEECH_AVAILABLE else "#666666",
-            fg=self.colors["text_primary"],
-            font=("Segoe UI", 12, "bold"),
-            command=self.toggle_voice_recognition,
-            state="normal" if SPEECH_AVAILABLE else "disabled",
-            relief="raised",
-            bd=2,
-        )
-        self.voice_button.pack(side=tk.LEFT, padx=10, pady=10)
-
-        # Status de voz
-        self.voice_status = tk.Label(
-            voice_frame,
-            text="Comando de voz: Inativo",
-            bg=self.colors["bg_primary"],
-            fg=self.colors["text_secondary"],
-            font=("Segoe UI", 10),
-        )
-        self.voice_status.pack(side=tk.LEFT, padx=20)
-
-        # Instruções
-        instructions = tk.Label(
-            voice_frame,
-            text="Atalhos: F1-F4 (Cumprimentos) | F5 (Digitar) | ESC (Minimizar) | F11 (Tela Cheia)",
-            bg=self.colors["bg_primary"],
-            fg=self.colors["text_secondary"],
-            font=("Segoe UI", 9),
-        )
-        instructions.pack(side=tk.RIGHT, padx=10)
+    
 
     def create_navigation_area(self):
         """Criar área de navegação com 3 colunas"""
@@ -607,7 +543,7 @@ class WindowsDesktopClient:
                 "Olá, tudo bem? Um momento, por favor. Estou finalizando a discussão de outro caso."
             ),
             5: self.auto_type_phrase,
-            7: self.toggle_voice_recognition,
+            
             11: self.toggle_fullscreen,
         }
 
@@ -773,71 +709,9 @@ class WindowsDesktopClient:
         self.root.clipboard_append(text)
         self.update_status("Frase copiada para clipboard!")
 
-    def toggle_voice_recognition(self):
-        """Alternar reconhecimento de voz"""
-        if not SPEECH_AVAILABLE or not self.recognizer:
-            return
+    
 
-        if self.voice_active:
-            self.stop_voice_recognition()
-        else:
-            self.start_voice_recognition()
-
-    def start_voice_recognition(self):
-        """Iniciar reconhecimento de voz"""
-        self.voice_active = True
-        self.voice_button.config(text="🔴 Parar Comando de Voz", bg="#f44336")
-        self.voice_status.config(text="Comando de voz: ATIVO - Escutando...")
-
-        def listen_continuously():
-            while self.voice_active:
-                try:
-                    with self.microphone as source:
-                        audio = self.recognizer.listen(
-                            source, timeout=1, phrase_time_limit=3
-                        )
-
-                    command = self.recognizer.recognize_google(
-                        audio, language="pt-BR"
-                    ).lower()
-                    self.process_voice_command(command)
-
-                except sr.WaitTimeoutError:
-                    pass
-                except sr.UnknownValueError:
-                    pass
-                except Exception as e:
-                    print(f"Erro no reconhecimento: {e}")
-                    time.sleep(0.5)
-
-        self.voice_thread = threading.Thread(target=listen_continuously, daemon=True)
-        self.voice_thread.start()
-
-    def stop_voice_recognition(self):
-        """Parar reconhecimento de voz"""
-        self.voice_active = False
-        self.voice_button.config(
-            text="🎤 Ativar Comando de Voz", bg=self.colors["button_active"]
-        )
-        self.voice_status.config(text="Comando de voz: Inativo")
-
-    def process_voice_command(self, command):
-        """Processar comando de voz"""
-        self.update_status(f"Comando: '{command}'")
-
-        # Comandos especiais
-        if "digitar" in command or "digite" in command:
-            self.auto_type_phrase()
-            return
-        elif "copiar" in command:
-            self.copy_phrase()
-            return
-        elif "fechar" in command or "sair" in command:
-            self.root.quit()
-            return
-
-        # Navegar por categorias, subcategorias ou frases
-        # Implementar lógica de busca por similaridade aqui
+    
 
     def toggle_minimize(self):
         """Alternar minimização"""
@@ -887,7 +761,7 @@ class WindowsDesktopClient:
 
     def cleanup(self):
         """Limpeza ao fechar"""
-        self.voice_active = False
+        
         if hasattr(self, "keyboard_listener"):
             self.keyboard_listener.stop()
 
@@ -942,8 +816,7 @@ def main():
     missing_deps = []
     if not REQUESTS_AVAILABLE:
         missing_deps.append("requests")
-    if not SPEECH_AVAILABLE:
-        missing_deps.append("speechrecognition")
+    
     if not AUTOGUI_AVAILABLE:
         missing_deps.append("pyautogui")
     if not PYNPUT_AVAILABLE:
