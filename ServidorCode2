@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Servidor de Automação Médica - Alessandra Morais
+Servidor de Automação Médica
 Versão Beta
 """
 import sqlite3
