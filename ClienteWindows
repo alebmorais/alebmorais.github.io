@@ -130,7 +130,7 @@ class WindowsDesktopClient:
         if WEBVIEW_AVAILABLE and pi_reachable and not self.force_legacy_ui:
             self.ui_mode = "webview"
             self.webview_window = webview.create_window(
-                "Automação Médica - Dr. Alessandra Morais",
+                "Automação Médica",
                 self.pi_url,
                 width=1000,
                 height=700,
@@ -140,7 +140,7 @@ class WindowsDesktopClient:
 
         # Necessário criar janela Tk para fallback ou interface legada
         self.root = tk.Tk()
-        self.root.title("Automação Médica - Dr. Alessandra Morais")
+        self.root.title("Automação Médica")
         self.root.geometry("1000x700")
         self.root.configure(bg=self.colors["bg_primary"])
         self.root.attributes("-topmost", True)
@@ -294,7 +294,7 @@ class WindowsDesktopClient:
             self.root.destroy()
             self.root = None
         self.webview_window = webview.create_window(
-            "Automação Médica - Dr. Alessandra Morais",
+            "Automação Médica",
             self.pi_url,
             width=1000,
             height=700,
@@ -334,7 +334,7 @@ class WindowsDesktopClient:
         # Subtítulo
         subtitle_label = tk.Label(
             header_frame,
-            text="Dr. Alessandra Morais - Neurologia",
+            text="Neurologia",
             bg=self.colors["bg_secondary"],
             fg=self.colors["text_secondary"],
             font=("Segoe UI", 12),
