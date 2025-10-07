@@ -1,6 +1,6 @@
 # Automação Médica
 
-Este repositório contém experimentos e protótipos utilizados na automação do consultório da Dra. Alessandra Morais. Os artefatos principais são o servidor web (Raspberry Pi) e o cliente desktop para Windows.
+Este repositório contém experimentos e protótipos utilizados na automação. Os artefatos principais são o servidor web (Raspberry Pi) e o cliente desktop para Windows.
 
 ## Cliente Desktop Windows
 
