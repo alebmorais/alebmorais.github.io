@@ -1,40 +1,28 @@
 # Automação Médica
 
-Este repositório contém experimentos e protótipos utilizados na automação. Os artefatos principais são o servidor web (Raspberry Pi) e o cliente desktop para Windows.
+Este repositório contém experimentos e protótipos utilizados na automação do consultório da Dra. Alessandra Morais. Os artefatos principais são o servidor web (Raspberry Pi) e o cliente desktop para Windows.
 
-## Cliente Desktop Windows
+## Primeiros Passos no Raspberry Pi Zero 2W (Raspberry Pi OS Lite 32-bit)
 
-O cliente Windows foi atualizado para reutilizar diretamente a interface web hospedada no Raspberry Pi. Para isso ele abre um _webview_ leve apontando para `http://pi.local:8080` sempre que o dispositivo está acessível.
+1.  **Atualize o sistema:**
+    ```bash
+    sudo apt update && sudo apt upgrade -y
+    ```
 
-### Dependências obrigatórias
+2.  **Instale o Git e o SQLite3:**
+    ```bash
+    sudo apt install git sqlite3 -y
+    ```
 
-1. **Python 3.10+**
-2. **[pywebview](https://pywebview.flowrl.com/)**
-3. **[Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)** (já vem com o Windows 11, mas inclua o instalador offline no pacote para Windows 10)
+3.  **Clone este repositório:**
+    ```bash
+    git clone https://github.com/alebmorais/alebmorais.github.io.git
+    cd alebmorais.github.io
+    ```
 
-Instalação sugerida via `pip`:
-
-```powershell
-py -m pip install --upgrade pip
-py -m pip install pywebview requests pyautogui pynput
-```
-
-Durante o empacotamento com PyInstaller ou similares, garanta que o módulo `pywebview` esteja listado nas dependências e distribua o instalador do WebView2 (`MicrosoftEdgeWebView2RuntimeInstallerX64.exe`) junto com o executável para que o usuário possa instalá-lo antes da primeira execução.
-
-### Comportamento offline
-
-Se o Raspberry Pi não puder ser alcançado, o cliente mostra uma tela simples com instruções para conectar-se à mesma rede e um botão **"Tentar novamente"**. Assim que a conexão for restabelecida, a interface web será carregada automaticamente. Caso o `pywebview` não esteja instalado, a tela avisará o usuário para instalar o pacote e reabrir o aplicativo.
-
-### Execução
-
-```powershell
-```
-
-O arquivo `ClienteWindows` mantém uma versão alternativa com os mesmos aprimoramentos e pode ser invocado da mesma forma.
+4.  **Continue para a preparação do banco de dados e execução do servidor (seções abaixo).**
 
 ---
-
-Para executar diretamente a interface web sem o cliente desktop, acesse `http://pi.local:8080` a partir de um navegador moderno conectado à mesma rede.
 
 ## Servidor Web Raspberry Pi
 
@@ -63,21 +51,57 @@ Se nenhuma variável estiver definida, o `ServidorCode` utiliza como padrão `/h
 
 ### Preparando o banco `automation.db`
 
-1. Copie o repositório para o Raspberry Pi (incluindo os arquivos `SQL_File` e `SQL_2`).
+1. Copie o repositório para o Raspberry Pi (incluindo os arquivos `SQL_Filesqlite3` e `SQL_2`).
 2. Gere o banco de dados a partir do SQL principal:
 
    ```bash
-   sqlite3 automation.db < SQL_File
+   sqlite3 automation.db < SQL_Filesqlite3
    ```
 
 3. Opcional: importe complementos contidos em `SQL_2` executando novamente `sqlite3 automation.db < SQL_2`.
 4. Mova o arquivo resultante para o caminho desejado (`/home/pi/automation.db`, `~/database/automation.db`, etc.) e ajuste `DB_PATH`/`AUTOMATION_DB_PATH` conforme necessário.
 
-> 💡 O `ServidorCode2` tenta criar automaticamente o banco ao detectar `SQL_File`, `SQL_File.sql` ou arquivos equivalentes nos diretórios `.` ou `./database`. Ainda assim, manter o processo manual documentado garante repetibilidade em ambientes limpos.
+> 💡 O `ServidorCode2` tenta criar automaticamente o banco ao detectar `SQL_Filesqlite3`, `SQL_Filesqlite3.sql` ou arquivos equivalentes nos diretórios `.` ou `./database`. Ainda assim, manter o processo manual documentado garante repetibilidade em ambientes limpos.
 
 ### Checklist de verificação
 
 1. Inicie o servidor desejado (`python3 ServidorCode2`).
 2. No navegador, acesse `http://pi.local:8080` (ou o IP informado no terminal) e confirme se as categorias são carregadas na barra lateral.
 3. Se o banco não carregar, confirme o caminho definido em `DB_PATH`/`AUTOMATION_DB_PATH` e verifique se `automation.db` contém a tabela `frases` com registros (`sqlite3 automation.db "SELECT COUNT(*) FROM frases;"`).
+
+---
+
+## Cliente Desktop Windows
+
+O cliente Windows foi atualizado para reutilizar diretamente a interface web hospedada no Raspberry Pi. Para isso ele abre um _webview_ leve apontando para `http://pi.local:8080` sempre que o dispositivo está acessível.
+
+### Dependências obrigatórias
+
+1. **Python 3.10+**
+2. **[pywebview](https://pywebview.flowrl.com/)**
+3. **[Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)** (já vem com o Windows 11, mas inclua o instalador offline no pacote para Windows 10)
+
+Instalação sugerida via `pip`:
+
+```bash
+python3 -m pip install --upgrade pip
+python3 -m pip install pywebview requests pyautogui pynput
+```
+
+Durante o empacotamento com PyInstaller ou similares, garanta que o módulo `pywebview` esteja listado nas dependências e distribua o instalador do WebView2 (`MicrosoftEdgeWebView2RuntimeInstallerX64.exe`) junto com o executável para que o usuário possa instalá-lo antes da primeira execução.
+
+### Comportamento offline
+
+Se o Raspberry Pi não puder ser alcançado, o cliente mostra uma tela simples com instruções para conectar-se à mesma rede e um botão **"Tentar novamente"**. Assim que a conexão for restabelecida, a interface web será carregada automaticamente. Caso o `pywebview` não esteja instalado, a tela avisará o usuário para instalar o pacote e reabrir o aplicativo.
+
+### Execução
+
+```powershell
+```
+
+O arquivo `ClienteWindows` mantém uma versão alternativa com os mesmos aprimoramentos e pode ser invocado da mesma forma.
+
+---
+
+Para executar diretamente a interface web sem o cliente desktop, acesse `http://pi.local:8080` a partir de um navegador moderno conectado à mesma rede.
 
