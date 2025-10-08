@@ -16,7 +16,7 @@ Instalação sugerida via `pip`:
 
 ```powershell
 py -m pip install --upgrade pip
-py -m pip install pywebview requests speechrecognition pyautogui pynput
+py -m pip install pywebview requests pyautogui pynput
 ```
 
 Durante o empacotamento com PyInstaller ou similares, garanta que o módulo `pywebview` esteja listado nas dependências e distribua o instalador do WebView2 (`MicrosoftEdgeWebView2RuntimeInstallerX64.exe`) junto com o executável para que o usuário possa instalá-lo antes da primeira execução.
